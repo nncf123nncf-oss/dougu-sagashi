@@ -75,7 +75,7 @@ h1{margin:4px 0 0;font-size:clamp(26px,6vw,34px);line-height:1.35}
 
   <div class="find">
     <label for="q">困りごとのことばで探す</label>
-    <input class="search" id="q" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="例: 予約　いんすた　請求">
+    <input class="search" id="q" type="search" inputmode="search" autocomplete="off" enterkeyhint="search" placeholder="例: いんすた　／　予約 確認">
     <p class="hint">ひらがな・カタカナ・全角と半角の違いは気にせず探せます。ことばを空白で区切ると、全部を含むものだけを出します。</p>
   </div>
 
@@ -200,7 +200,7 @@ const TOOLS=[[1,"優先度つきTodoアプリ","やることが増えると、�
 [93,"立て替えた分の確認リンク","立て替えたお金を請求し忘れていた",1,"https://nncf123nncf-oss.github.io/tatekae-check-link/"],
 [94,"お客さまの声の掲載OKリンク","感想を載せていいか聞けずに眠っている",2,"https://nncf123nncf-oss.github.io/koe-ok-link/"],
 [95,"写真つき手順カード","パートさんに同じ手順を何度も説明している",3,"https://nncf123nncf-oss.github.io/tejun-card/"],
-[96,"電話の聞き漏れチェック","電話を切ってから聞き忘れに気づく",5,"https://nncf123nncf-oss.github.io/denwa-check/"],
+[96,"電話の聞き漏れチェック","電話を切ってから聞き忘れに気づく",0,"https://nncf123nncf-oss.github.io/denwa-check/"],
 [97,"受付の名簿チェック","受付で名前を探すのに手間取る",0,"https://nncf123nncf-oss.github.io/uketsuke-check/"],
 [98,"外国人のお客さまへのゆびさしカード","外国人のお客さまに身ぶりで説明している",5,"https://nncf123nncf-oss.github.io/yubisashi-card/"],
 [99,"年末棚卸しの二人合算","2人の棚卸しで二重と抜けに気づけない",3,"https://nncf123nncf-oss.github.io/tanaoroshi-futari/"],
@@ -214,7 +214,8 @@ const TOOLS=[[1,"優先度つきTodoアプリ","やることが増えると、�
   var current = -1; // -1 = すべて
 
   // 比べる前にそろえる: 全角半角(NFKC)→小文字→カタカナをひらがな→空白と記号を取る
-  var STRIP = /[\s　「」『』（）()【】\[\]、。，．,.・･!！?？:：;；"“”'‘’〜~\-－―_／\/]/g;
+  // 文字と数字以外（空白・カギ括弧・句読点・⇄・→ など）はすべて取る
+  var STRIP = /[^\p{L}\p{N}]/gu;
   function norm(s){
     s = String(s == null ? "" : s);
     if (s.normalize) s = s.normalize("NFKC");
@@ -233,7 +234,7 @@ const TOOLS=[[1,"優先度つきTodoアプリ","やることが増えると、�
   });
 
   $("total").textContent = String(items.length);
-  $("totalNote").textContent = "まとめサイトに載っている" + SITE_COUNT + "個と、このページです（Day064のWindowsアプリは、まとめサイトと同じく載せていません）。";
+  $("totalNote").textContent = "まとめサイトに載っている" + SITE_COUNT + "個と、このページです（Day064のWindowsアプリは、いまはまとめサイトに載せていないので、ここにも入れていません）。";
 
   function pad(n){ return ("00" + n).slice(-3); }
   function chip(label, idx, n){
@@ -294,7 +295,8 @@ const TOOLS=[[1,"優先度つきTodoアプリ","やることが増えると、�
     empty.hidden = hits.length !== 0;
   }
 
-  q.addEventListener("input", render);
+  q.addEventListener("input", function(e){ if (e.isComposing) return; render(); });
+  q.addEventListener("compositionend", render);
   q.addEventListener("keydown", function(e){ if (e.key === "Enter") q.blur(); });
   $("reset").addEventListener("click", function(){ q.value = ""; current = -1; render(); q.focus(); });
   render();
